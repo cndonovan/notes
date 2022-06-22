@@ -1,23 +1,17 @@
-import * as uuid from 'uuid';
 import handler from '../util/handler';
 import dynamoDb from '../util/dynamodb';
 
 export const main = handler(async (req) => {
   const userId = req.requestContext.authorizer.iam.cognitoIdentity.identityId;
-  const { content, attachment } = JSON.parse(req.body);
+  const noteId = req.pathParameters.id;
 
-  const Item = {
-    userId,
-    noteId: uuid.v1(),
-    content,
-    attachment,
-    createdAt: Date.now(),
-  };
-
-  await dynamoDb.put({
+  await dynamoDb.delete({
     TableName: process.env.TABLE_NAME,
-    Item,
+    Key: {
+      userId,
+      noteId,
+    },
   });
 
-  return Item;
+  return { status: true };
 });

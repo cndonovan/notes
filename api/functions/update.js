@@ -4,18 +4,21 @@ import dynamoDb from '../util/dynamodb';
 export const main = handler(async (req) => {
   const userId = req.requestContext.authorizer.iam.cognitoIdentity.identityId;
   const noteId = req.pathParameters.id;
+  const { content, attachment } = JSON.parse(req.body);
 
-  const result = await dynamoDb.get({
+  await dynamoDb.update({
     TableName: process.env.TABLE_NAME,
     Key: {
       userId,
       noteId,
     },
+    UpdateExpression: 'SET content = :content, attachment = :attachment',
+    ExpressionAttributeValues: {
+      ':attachment': attachment || null,
+      ':content': content || null,
+    },
+    ReturnValues: 'ALL_NEW',
   });
 
-  if (!result.Item) {
-    throw new Error('Item not found.');
-  }
-
-  return result.Item;
+  return { status: true };
 });
